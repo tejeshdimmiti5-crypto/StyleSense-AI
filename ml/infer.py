@@ -1,11 +1,12 @@
 """Load the trained ChilliProfit classifier and run one-image inference."""
 
+from functools import lru_cache
 from pathlib import Path
 
 import torch
 from PIL import Image
-from torchvision import models, transforms
 from torch import nn
+from torchvision import models, transforms
 
 DEFAULT_MODEL = Path(__file__).parent / "artifacts" / "chilli_model.pt"
 
@@ -16,8 +17,10 @@ TRANSFORM = transforms.Compose([
 ])
 
 
-def load_model(model_path=DEFAULT_MODEL):
-    model_path = Path(model_path)
+@lru_cache(maxsize=2)
+def load_model(model_path_str: str = str(DEFAULT_MODEL)):
+    """Load a checkpoint once and reuse it for subsequent API requests."""
+    model_path = Path(model_path_str)
     if not model_path.exists():
         return None
 
@@ -31,13 +34,14 @@ def load_model(model_path=DEFAULT_MODEL):
 
 
 def predict_image(image: Image.Image, model_path=DEFAULT_MODEL):
-    loaded = load_model(model_path)
+    """Return class probabilities for one RGB image."""
+    loaded = load_model(str(Path(model_path)))
     if loaded is None:
         return None
 
     model, class_names = loaded
     tensor = TRANSFORM(image.convert("RGB")).unsqueeze(0)
-    with torch.no_grad():
+    with torch.inference_mode():
         probabilities = torch.softmax(model(tensor), dim=1)[0]
         confidence, index = probabilities.max(dim=0)
 
