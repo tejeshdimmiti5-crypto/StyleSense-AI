@@ -4,6 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    autoDeployTrigger: checksPass
     healthCheckPath: /health
     envVars:
       - key: FRONTEND_ORIGIN
@@ -12,3 +13,5 @@ services:
         value: https://github.com/tejeshdimmiti5-crypto/StyleSense-AI/releases/download/model-1/chilli_model.pt
       - key: CHILLIPROFIT_MODEL_SHA256
         value: b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce
+      - key: CHILLIPROFIT_MODEL_VERSION
+        value: model-1
