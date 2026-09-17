@@ -20,7 +20,7 @@ MODEL_PATH = ROOT / "ml" / "artifacts" / "chilli_model.pt"
 
 app = FastAPI(
     title="ChilliProfit AI API",
-    version="0.2.0",
+    version="0.3.0",
     description="Backend API for chilli leaf screening and farm intelligence.",
 )
 
@@ -41,6 +41,19 @@ def model_available():
     return MODEL_PATH.exists() and predict_image is not None
 
 
+def model_metadata():
+    if not model_available() or load_model is None:
+        return None
+    try:
+        loaded = load_model(str(MODEL_PATH))
+        if loaded is None:
+            return None
+        _, class_names = loaded
+        return {"architecture": "EfficientNet-B0", "classes": class_names, "image_size": 224}
+    except Exception:
+        return None
+
+
 @app.get("/")
 def root():
     return {"service": "ChilliProfit AI", "status": "online"}
@@ -52,6 +65,7 @@ def health():
         "status": "ok",
         "model_configured": model_available(),
         "model_path": str(MODEL_PATH),
+        "model": model_metadata(),
     }
 
 
@@ -94,15 +108,27 @@ async def analyze_leaf(file: UploadFile = File(...)):
 
     disease = result["class_name"]
     confidence = result["confidence"]
-    severity_value = "High" if confidence >= 85 and disease != "healthy" else "Moderate" if disease != "healthy" else "Low"
-    next_step = "Continue monitoring" if disease == "healthy" else "Inspect nearby plants and confirm with an agricultural professional"
+    is_healthy = disease.strip().lower() == "healthy"
+
+    # This is deliberately a screening-confidence band, not a clinical/agronomic
+    # disease-severity measurement. True severity requires a separately labelled model.
+    screening_band = (
+        "High confidence" if confidence >= 85
+        else "Moderate confidence" if confidence >= 60
+        else "Low confidence"
+    )
+    next_step = (
+        "Continue monitoring and rescan if symptoms change"
+        if is_healthy
+        else "Inspect nearby plants and confirm the result with an agricultural professional"
+    )
 
     return {
         "status": "prediction",
         "title": disease.replace("_", " ").title(),
         "message": "Model prediction generated from the uploaded chilli leaf image.",
         "confidence": confidence,
-        "severity": severity_value,
+        "severity": screening_band,
         "zone": "Not assigned",
         "next_step": next_step,
         "probabilities": result["probabilities"],
