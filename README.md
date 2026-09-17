@@ -1,8 +1,10 @@
 # 🌶️ ChilliProfit AI
 
-**AI-Based Disease Detection and Profit Optimization for 1-Acre Chilli Farms**
+**AI-Based Chilli Disease Detection and Farm Intelligence Platform**
 
-ChilliProfit AI is a smart-farming project designed around the needs of small chilli farms in Andhra Pradesh and Telangana. The goal is to combine crop disease screening, farm-zone monitoring, irrigation intelligence, yield prediction and farm economics in one simple dashboard.
+ChilliProfit AI is a smart-farming platform designed to help chilli growers monitor crop health, identify possible diseases from leaf images, understand farm-zone risk and evaluate farm economics.
+
+The platform is **not limited to a fixed farm size**. Farm zones, crop observations and economic inputs are designed to scale according to the user's actual farm.
 
 ## Current version
 
@@ -11,7 +13,7 @@ The repository currently contains a responsive frontend prototype with:
 - Chilli-focused landing page
 - Leaf image upload and preview
 - Disease-analysis result interface
-- 1-acre 3×3 farm-zone map
+- Scalable farm-zone health map
 - Zone risk indicators
 - Basic revenue and net-return calculator
 - Mobile-responsive design
@@ -49,17 +51,26 @@ Farmer dashboard
 
 API keys should **never** be committed to this repository. Use environment variables on the backend.
 
-## Why chilli?
+## Core features planned
 
-Andhra Pradesh reported about 246,752 hectares of dried chilli area and 1.44 million tonnes of production in its 2023–24 horticulture estimates. Telangana also identifies chilli as a major horticultural crop. These facts make chilli a useful regional focus for an AP/Telangana agriculture project, while farm income itself remains dependent on yield, costs, market prices, water and other conditions.
+- AI chilli disease detection
+- Disease severity estimation
+- Farm-zone risk monitoring
+- Weather-based crop risk insights
+- Soil and irrigation intelligence
+- Yield prediction
+- Cost and profit scenarios
+- Telugu + English farmer interface
+- Secure backend API
+- Historical crop-health records
 
 ## Roadmap
 
 - [ ] Collect and clean chilli disease dataset
 - [ ] Train baseline disease classifier
-- [ ] Compare lightweight models for mobile/edge deployment
+- [ ] Compare lightweight models for edge/mobile deployment
 - [ ] Add severity estimation
-- [ ] Add real farm-zone records
+- [ ] Replace demo farm zones with user-defined farm layouts
 - [ ] Add weather and soil inputs
 - [ ] Add yield prediction
 - [ ] Add cost/profit scenarios
@@ -68,4 +79,4 @@ Andhra Pradesh reported about 246,752 hectares of dried chilli area and 1.44 mil
 
 ## Project name
 
-**ChilliProfit AI — Smart 1-Acre Chilli Farming**
+**ChilliProfit AI — Smart Chilli Farming Intelligence**
