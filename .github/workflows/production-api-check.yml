@@ -12,6 +12,16 @@ on:
         required: false
         default: "true"
         type: boolean
+      expected_model_version:
+        description: Expected deployed model release/version
+        required: false
+        default: "model-1"
+        type: string
+      expected_model_sha256:
+        description: Expected SHA-256 of the deployed model
+        required: false
+        default: "b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce"
+        type: string
 
 jobs:
   verify:
@@ -32,10 +42,12 @@ jobs:
           print("Health check: OK")
           PY
 
-      - name: Check model status
+      - name: Check model status and identity
         env:
           API_URL: ${{ inputs.api_url }}
           EXPECTED_MODEL: ${{ inputs.expected_model }}
+          EXPECTED_MODEL_VERSION: ${{ inputs.expected_model_version }}
+          EXPECTED_MODEL_SHA256: ${{ inputs.expected_model_sha256 }}
         run: |
           set -euo pipefail
           API_URL="${API_URL%/}"
@@ -50,7 +62,9 @@ jobs:
               model = data.get("model") or {}
               assert model.get("architecture") == "EfficientNet-B0", data
               assert len(model.get("classes", [])) == 5, data
-          print("API/model status: OK")
+              assert model.get("version") == os.environ["EXPECTED_MODEL_VERSION"], data
+              assert model.get("sha256") == os.environ["EXPECTED_MODEL_SHA256"], data
+          print("API/model identity: OK")
           print(data)
           PY
 
@@ -61,13 +75,13 @@ jobs:
           set -euo pipefail
           API_URL="${API_URL%/}"
           python - <<'PY'
-          from pathlib import Path
           from PIL import Image
           image = Image.new("RGB", (32, 32), (90, 150, 40))
           image.save("smoke.jpg", format="JPEG")
           PY
           curl --fail --silent --show-error --max-time 60 \
             -F "file=@smoke.jpg;type=image/jpeg" \
+            -F "zone=Zone 4" \
             "$API_URL/api/analyze" | tee analysis.json
           python - <<'PY'
           import json
@@ -75,7 +89,13 @@ jobs:
           assert data.get("status") == "prediction", data
           assert data.get("confidence") is not None, data
           assert isinstance(data.get("probabilities"), dict), data
+          assert data.get("zone") == "Zone 4", data
+          model = data.get("model") or {}
+          assert model.get("version") is not None, data
+          assert model.get("sha256") is not None, data
           print("Inference endpoint: OK")
           print("Prediction:", data.get("title"))
           print("Confidence:", data.get("confidence"))
+          print("Zone:", data.get("zone"))
+          print("Model:", model.get("version"))
           PY
