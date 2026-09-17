@@ -23,28 +23,22 @@ function setResultState(title, message, options = {}) {
   severity.textContent = options.screeningBand || '—';
   zone.textContent = options.zone || '—';
   nextStep.textContent = options.nextStep || '—';
-
-  if (resultTop) {
-    resultTop.innerHTML = `<span class="status-dot"></span><span>${options.label || 'AI ANALYSIS'}</span><span class="demo-tag">${options.modelVersion || 'MODEL'}</span>`;
-  }
+  if (resultTop) resultTop.innerHTML = `<span class="status-dot"></span><span>${options.label || 'AI ANALYSIS'}</span><span class="demo-tag">${options.modelVersion || 'MODEL'}</span>`;
 }
 
 leafInput.addEventListener('change', async () => {
   const file = leafInput.files?.[0];
   if (!file) return;
-
   if (!ALLOWED_TYPES.has(file.type)) {
     setResultState('Unsupported image', 'Please upload a JPG, PNG or WEBP image.', { label: 'UPLOAD ERROR', modelVersion: 'CHECK' });
     leafInput.value = '';
     return;
   }
-
   if (file.size > MAX_BYTES) {
     setResultState('Image too large', 'The image must be 10 MB or smaller.', { label: 'UPLOAD ERROR', modelVersion: 'CHECK' });
     leafInput.value = '';
     return;
   }
-
   const reader = new FileReader();
   reader.onload = event => {
     preview.src = event.target.result;
@@ -52,49 +46,34 @@ leafInput.addEventListener('change', async () => {
     uploadContent.hidden = true;
   };
   reader.readAsDataURL(file);
-
   await analyzeLeaf(file);
 });
 
 async function analyzeLeaf(file) {
   setResultState('Analyzing image…', 'Uploading the leaf image to the ChilliProfit AI backend.', { label: 'AI ANALYSIS', modelVersion: 'MODEL', nextStep: 'Processing' });
-
   const formData = new FormData();
   formData.append('file', file);
-
   try {
-    const response = await fetch(`${API_URL}/api/analyze`, {
-      method: 'POST',
-      body: formData
-    });
-
+    const response = await fetch(`${API_URL}/api/analyze`, { method: 'POST', body: formData });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || 'Analysis request failed.');
-
     if (data.status === 'prediction') {
       setResultState(data.title || 'Analysis complete', data.message || 'Model prediction generated.', {
         confidence: data.confidence,
         screeningBand: data.severity,
-        zone: data.zone,
+        zone: data.zone || selectedZone,
         nextStep: data.next_step,
         label: 'AI ANALYSIS',
         modelVersion: data.model_version || 'MODEL'
       });
-
       if (data.probabilities) {
-        const probabilityText = Object.entries(data.probabilities)
-          .sort(([, a], [, b]) => b - a)
-          .map(([name, value]) => `${name.replaceAll('_', ' ')} ${value}%`)
-          .join(' • ');
+        const probabilityText = Object.entries(data.probabilities).sort(([, a], [, b]) => b - a).map(([name, value]) => `${name.replaceAll('_', ' ')} ${value}%`).join(' • ');
         resultText.textContent = `${data.message || 'Model prediction generated.'} Probabilities: ${probabilityText}.`;
       }
     } else {
       setResultState(data.title || 'Image received', data.message || 'The image was validated successfully.', {
-        label: 'MODEL STATUS',
-        modelVersion: data.model_version || 'SETUP',
-        nextStep: data.next_step,
-        screeningBand: data.severity,
-        zone: data.zone
+        label: 'MODEL STATUS', modelVersion: data.model_version || 'SETUP', nextStep: data.next_step,
+        screeningBand: data.severity, zone: data.zone || selectedZone
       });
     }
   } catch (error) {
@@ -102,12 +81,77 @@ async function analyzeLeaf(file) {
   }
 }
 
+const farmRows = document.getElementById('farmRows');
+const farmCols = document.getElementById('farmCols');
+const buildFarm = document.getElementById('buildFarm');
+const farmGrid = document.getElementById('farmGrid');
+const farmStatus = document.getElementById('farmStatus');
+const priorityZones = document.getElementById('priorityZones');
+let selectedZone = '';
+const zoneStates = new Map([
+  ['Zone 5', 'risk'],
+  ['Zone 8', 'risk']
+]);
+
+function clampDimension(value) { return Math.max(1, Math.min(12, Number(value) || 1)); }
+
+function buildFarmMap() {
+  const rows = clampDimension(farmRows.value);
+  const cols = clampDimension(farmCols.value);
+  farmRows.value = rows;
+  farmCols.value = cols;
+  const count = rows * cols;
+  farmGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+  farmGrid.replaceChildren();
+  for (let index = 1; index <= count; index += 1) {
+    const zoneName = `Zone ${index}`;
+    const state = zoneStates.get(zoneName) || 'healthy';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `zone ${state}`;
+    button.dataset.zone = zoneName;
+    button.setAttribute('aria-label', `${zoneName}, ${state === 'risk' ? 'high risk' : state}`);
+    button.innerHTML = `<b>${index}</b><small>${state === 'risk' ? 'High risk' : state === 'watch' ? 'Watch' : 'Healthy'}</small>`;
+    button.addEventListener('click', () => selectFarmZone(zoneName, button));
+    button.addEventListener('contextmenu', event => {
+      event.preventDefault();
+      cycleZoneState(zoneName);
+    });
+    farmGrid.appendChild(button);
+  }
+  farmStatus.textContent = `● ${count} zones`;
+  updatePriorityZones();
+}
+
+function selectFarmZone(zoneName, button) {
+  selectedZone = zoneName;
+  document.querySelectorAll('#farmGrid .zone').forEach(item => { item.style.outline = 'none'; });
+  button.style.outline = '3px solid rgba(185,223,101,.85)';
+  zone.textContent = zoneName;
+  resultText.textContent = `${zoneName} selected. Capture a leaf image from this zone for disease screening.`;
+}
+
+function cycleZoneState(zoneName) {
+  const current = zoneStates.get(zoneName) || 'healthy';
+  const next = current === 'healthy' ? 'watch' : current === 'watch' ? 'risk' : 'healthy';
+  zoneStates.set(zoneName, next);
+  buildFarmMap();
+}
+
+function updatePriorityZones() {
+  const risks = [...zoneStates.entries()].filter(([, state]) => state === 'risk').map(([name]) => name);
+  priorityZones.textContent = risks.length ? risks.join(' & ') : 'Select observations';
+}
+
+buildFarm.addEventListener('click', buildFarmMap);
+[farmRows, farmCols].forEach(input => input.addEventListener('change', buildFarmMap));
+buildFarmMap();
+
 const yieldInput = document.getElementById('yieldInput');
 const priceInput = document.getElementById('priceInput');
 const costInput = document.getElementById('costInput');
 const revenue = document.getElementById('revenue');
 const net = document.getElementById('net');
-
 function updateEconomics() {
   const y = Number(yieldInput.value) || 0;
   const p = Number(priceInput.value) || 0;
@@ -118,15 +162,5 @@ function updateEconomics() {
   revenue.textContent = money(gross);
   net.textContent = money(profit);
 }
-
 [yieldInput, priceInput, costInput].forEach(input => input.addEventListener('input', updateEconomics));
 updateEconomics();
-
-document.querySelectorAll('.zone').forEach(button => {
-  button.addEventListener('click', () => {
-    document.querySelectorAll('.zone').forEach(z => z.style.outline = 'none');
-    button.style.outline = '3px solid rgba(185,223,101,.85)';
-    resultText.textContent = `${button.dataset.zone} selected. Capture a leaf image from this zone for disease screening.`;
-    zone.textContent = button.dataset.zone;
-  });
-});
