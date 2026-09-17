@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ChilliProfit AI - smart disease detection and farm decision support for 1-acre chilli farms." />
-  <title>ChilliProfit AI | Smart 1-Acre Chilli Farming</title>
+  <meta name="description" content="ChilliProfit AI - AI-powered chilli disease detection and farm intelligence." />
+  <title>ChilliProfit AI | Smart Chilli Farming</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -24,16 +24,16 @@
   <main id="top">
     <section class="hero">
       <div class="hero-copy">
-        <span class="eyebrow">SMART FARMING • 1 ACRE</span>
+        <span class="eyebrow">SMART FARMING • AI POWERED</span>
         <h1>Protect the crop.<br /><span>Protect the profit.</span></h1>
-        <p>AI-powered disease screening and farm decision support designed for small chilli farms in Andhra Pradesh and Telangana.</p>
+        <p>AI-powered disease screening and farm decision support for chilli growers across Andhra Pradesh, Telangana and beyond.</p>
         <div class="hero-actions">
           <a class="primary" href="#analyzer">Start Disease Scan →</a>
           <a class="secondary" href="#farm">Explore dashboard</a>
         </div>
         <div class="hero-stats">
-          <div><strong>1</strong><span>acre model</span></div>
           <div><strong>AI</strong><span>crop analysis</span></div>
+          <div><strong>24/7</strong><span>farm intelligence</span></div>
           <div><strong>₹</strong><span>profit planning</span></div>
         </div>
       </div>
@@ -45,7 +45,7 @@
           <span class="healthy"></span><span class="risk"></span><span class="watch"></span>
           <span class="healthy"></span><span class="risk"></span><span class="healthy"></span>
         </div>
-        <div class="hero-card-bottom"><span>Farm health</span><strong>78%</strong></div>
+        <div class="hero-card-bottom"><span>Crop health</span><strong>78%</strong></div>
       </div>
     </section>
 
@@ -53,7 +53,7 @@
       <div class="section-heading">
         <span class="eyebrow">01 • DISEASE DETECTION</span>
         <h2>Scan a chilli leaf</h2>
-        <p>Upload a clear leaf image. This first version provides the complete analysis interface; the production model can be connected later.</p>
+        <p>Upload a clear leaf image to start the disease-screening workflow. The interface is ready for connection to a trained computer-vision model.</p>
       </div>
 
       <div class="analyzer-layout">
@@ -76,7 +76,7 @@
           <div class="progress"><i id="confidenceBar"></i></div>
           <div class="result-grid">
             <div><small>Severity</small><strong id="severity">—</strong></div>
-            <div><small>Zone</small><strong id="zone">—</strong></div>
+            <div><small>Farm zone</small><strong id="zone">—</strong></div>
             <div><small>Next step</small><strong id="nextStep">—</strong></div>
           </div>
           <p class="disclaimer">Screening result only. Confirm disease and treatment decisions with a qualified agricultural professional.</p>
@@ -86,13 +86,13 @@
 
     <section class="section dark" id="farm">
       <div class="section-heading light">
-        <span class="eyebrow">02 • ONE-ACRE FARM MAP</span>
+        <span class="eyebrow">02 • FARM HEALTH MAP</span>
         <h2>Know where the risk is.</h2>
-        <p>Turn individual observations into a simple zone-level view of your farm.</p>
+        <p>Turn crop observations into a simple zone-level view that can scale with the size of the farm.</p>
       </div>
       <div class="farm-dashboard">
         <div class="map-panel">
-          <div class="panel-title"><span>1-acre chilli field</span><span class="live">● Monitoring</span></div>
+          <div class="panel-title"><span>Farm health zones</span><span class="live">● Monitoring</span></div>
           <div class="farm-grid">
             <button class="zone healthy" data-zone="Zone 1"><b>1</b><small>Healthy</small></button>
             <button class="zone healthy" data-zone="Zone 2"><b>2</b><small>Healthy</small></button>
@@ -107,9 +107,9 @@
           <div class="legend"><span><i class="dot healthy"></i> Healthy</span><span><i class="dot watch"></i> Watch</span><span><i class="dot risk"></i> High risk</span></div>
         </div>
         <div class="insights">
-          <div class="insight"><span>⚠️</span><div><small>Priority zone</small><strong>Zone 5 & 8</strong><p>Inspect nearby plants and capture additional images.</p></div></div>
-          <div class="insight"><span>💧</span><div><small>Irrigation</small><strong>Monitor soil moisture</strong><p>Connect a sensor later for automated irrigation advice.</p></div></div>
-          <div class="insight"><span>📈</span><div><small>Yield model</small><strong>Ready for farm data</strong><p>Yield prediction will use crop, weather and farm inputs.</p></div></div>
+          <div class="insight"><span>⚠️</span><div><small>Priority zones</small><strong>Zone 5 & 8</strong><p>Inspect nearby plants and capture additional images.</p></div></div>
+          <div class="insight"><span>💧</span><div><small>Irrigation</small><strong>Monitor soil moisture</strong><p>Connect sensors later for automated irrigation intelligence.</p></div></div>
+          <div class="insight"><span>📈</span><div><small>Yield model</small><strong>Ready for farm data</strong><p>Yield prediction can combine crop, weather and farm inputs.</p></div></div>
         </div>
       </div>
     </section>
@@ -118,7 +118,7 @@
       <div class="section-heading">
         <span class="eyebrow">03 • FARM ECONOMICS</span>
         <h2>Make the numbers visible.</h2>
-        <p>Enter your own farm values. The dashboard calculates the basic economics; market prices are not assumed to be guaranteed.</p>
+        <p>Enter your own farm values. The dashboard calculates basic economics without assuming a guaranteed market price.</p>
       </div>
       <div class="economics-card">
         <div class="inputs">
@@ -132,13 +132,13 @@
 
     <section class="section cta">
       <span class="eyebrow">NEXT BUILD</span>
-      <h2>From demo to real AI.</h2>
-      <p>Next, connect a trained chilli disease model, weather data, soil inputs and a secure backend API.</p>
+      <h2>From prototype to real AI.</h2>
+      <p>Connect a trained chilli disease model, weather data, soil inputs and a secure backend API.</p>
       <a class="primary" href="#analyzer">Continue building →</a>
     </section>
   </main>
 
-  <footer><span>🌶️ ChilliProfit AI</span><span>Built for smart 1-acre farming</span></footer>
+  <footer><span>🌶️ ChilliProfit AI</span><span>AI-powered chilli farming intelligence</span></footer>
   <script src="app.js"></script>
 </body>
 </html>
