@@ -2,8 +2,6 @@
 .github
 ml/data
 ml/.venv
-ml/artifacts/*.pt
-ml/artifacts/*.json
 __pycache__
 *.pyc
 .env
