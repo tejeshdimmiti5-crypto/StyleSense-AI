@@ -1,3 +1,5 @@
+const API_URL = window.CHILLIPROFIT_API_URL || 'http://127.0.0.1:8000';
+
 const leafInput = document.getElementById('leafInput');
 const preview = document.getElementById('preview');
 const uploadContent = document.getElementById('uploadContent');
@@ -9,36 +11,58 @@ const severity = document.getElementById('severity');
 const zone = document.getElementById('zone');
 const nextStep = document.getElementById('nextStep');
 
-leafInput.addEventListener('change', () => {
+leafInput.addEventListener('change', async () => {
   const file = leafInput.files?.[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = event => {
     preview.src = event.target.result;
     preview.hidden = false;
     uploadContent.hidden = true;
-    runDemoAnalysis();
   };
   reader.readAsDataURL(file);
+
+  await analyzeLeaf(file);
 });
 
-function runDemoAnalysis() {
-  // Demo-only result. Replace this function with the real ML/API response.
-  const demo = {
-    title: 'Possible leaf disease',
-    text: 'The image has been accepted for screening. Connect the trained chilli model to return a real disease class.',
-    confidence: 92,
-    severity: 'Moderate',
-    zone: 'Zone 5',
-    next: 'Inspect nearby plants'
-  };
-  resultTitle.textContent = demo.title;
-  resultText.textContent = demo.text;
-  confidence.textContent = `${demo.confidence}%`;
-  confidenceBar.style.width = `${demo.confidence}%`;
-  severity.textContent = demo.severity;
-  zone.textContent = demo.zone;
-  nextStep.textContent = demo.next;
+async function analyzeLeaf(file) {
+  resultTitle.textContent = 'Analyzing image…';
+  resultText.textContent = 'Uploading the leaf image to the ChilliProfit AI backend.';
+  confidence.textContent = '—';
+  confidenceBar.style.width = '0%';
+  severity.textContent = '—';
+  zone.textContent = '—';
+  nextStep.textContent = 'Processing';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch(`${API_URL}/api/analyze`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Analysis request failed.');
+
+    resultTitle.textContent = data.title || 'Analysis complete';
+    resultText.textContent = data.message || 'No additional analysis message was returned.';
+    confidence.textContent = data.confidence == null ? 'Pending' : `${data.confidence}%`;
+    confidenceBar.style.width = data.confidence == null ? '0%' : `${data.confidence}%`;
+    severity.textContent = data.severity || '—';
+    zone.textContent = data.zone || '—';
+    nextStep.textContent = data.next_step || '—';
+  } catch (error) {
+    resultTitle.textContent = 'Backend unavailable';
+    resultText.textContent = `${error.message} Start the FastAPI server and try again.`;
+    confidence.textContent = '—';
+    confidenceBar.style.width = '0%';
+    severity.textContent = '—';
+    zone.textContent = '—';
+    nextStep.textContent = 'Start API';
+  }
 }
 
 const yieldInput = document.getElementById('yieldInput');
