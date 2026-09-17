@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# ML data and generated model artifacts
+ml/data/
+ml/artifacts/*.pt
+ml/artifacts/*.pth
+ml/artifacts/*.onnx
+ml/artifacts/*.safetensors
+ml/artifacts/*.json
+
+# Local outputs
+*.log
