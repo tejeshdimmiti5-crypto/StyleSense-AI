@@ -1,0 +1,32 @@
+{
+  "primary": {
+    "name": "COLD Chilli Leaf Disease Classification",
+    "source": "https://huggingface.co/datasets/Project-AgML/COLD_chili_leaf_disease_classification",
+    "license": "CC BY 4.0",
+    "mode": "huggingface",
+    "config": "raw",
+    "classes": [
+      "cercospora",
+      "healthy",
+      "mites_and_trips",
+      "nutritional",
+      "powdery_mildew"
+    ]
+  },
+  "external_validation": {
+    "name": "Krishna River Basin Chili Leaf Disease Dataset",
+    "source": "https://data.mendeley.com/datasets/ymt8k9bjkn/3",
+    "license": "CC BY 4.0",
+    "mode": "manual_download",
+    "original_images": 1856,
+    "classes": [
+      "bacterial_spot",
+      "curl_virus",
+      "cercospora_leaf_spot",
+      "nutrition_deficiency",
+      "white_spot",
+      "healthy"
+    ],
+    "purpose": "external field validation; do not mix into training until labels and duplicates are checked"
+  }
+}
