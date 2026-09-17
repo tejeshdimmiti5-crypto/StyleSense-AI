@@ -12,6 +12,9 @@ on:
         required: false
         default: "32"
 
+permissions:
+  contents: write
+
 jobs:
   train:
     runs-on: ubuntu-latest
@@ -58,3 +61,20 @@ jobs:
             ml/artifacts/chilli_model.pt
             ml/artifacts/chilli_model.json
             ml/artifacts/chilli_model.sha256
+
+      - name: Publish model release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="model-${{ github.run_number }}"
+          gh release create "$TAG" \
+            ml/artifacts/chilli_model.pt \
+            ml/artifacts/chilli_model.json \
+            ml/artifacts/chilli_model.sha256 \
+            --title "ChilliProfit model $TAG" \
+            --notes "Model trained by GitHub Actions run ${{ github.run_id }}. Verify chilli_model.sha256 before deployment." \
+            --target "${GITHUB_SHA}"
+          echo "MODEL_RELEASE_TAG=$TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "Model URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG/chilli_model.pt" >> "$GITHUB_STEP_SUMMARY"
+          echo "Metrics URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG/chilli_model.json" >> "$GITHUB_STEP_SUMMARY"
+          echo "SHA256 URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG/chilli_model.sha256" >> "$GITHUB_STEP_SUMMARY"
