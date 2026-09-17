@@ -3,7 +3,7 @@ import io
 import os
 import sys
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
@@ -20,13 +20,14 @@ MODEL_PATH = ROOT / "ml" / "artifacts" / "chilli_model.pt"
 MODEL_VERSION = os.getenv("CHILLIPROFIT_MODEL_VERSION", "model-1")
 MODEL_SHA256 = os.getenv("CHILLIPROFIT_MODEL_SHA256", "b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce")
 
-app = FastAPI(title="ChilliProfit AI API", version="0.5.0", description="Backend API for chilli leaf screening and farm intelligence.")
+app = FastAPI(title="ChilliProfit AI API", version="0.6.0", description="Backend API for chilli leaf screening and farm intelligence.")
 
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
 app.add_middleware(CORSMiddleware, allow_origins=[frontend_origin] if frontend_origin != "*" else ["*"], allow_credentials=frontend_origin != "*", allow_methods=["*"], allow_headers=["*"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_BYTES = 10 * 1024 * 1024
+MAX_ZONE_LENGTH = 80
 
 
 def model_available():
@@ -52,6 +53,13 @@ def model_metadata():
         return None
 
 
+def clean_zone(zone: str | None) -> str:
+    value = (zone or "").strip()
+    if not value:
+        return "Not assigned"
+    return value[:MAX_ZONE_LENGTH]
+
+
 @app.get("/")
 def root():
     return {"service": "ChilliProfit AI", "status": "online"}
@@ -73,7 +81,9 @@ def api_health():
 
 
 @app.post("/api/analyze")
-async def analyze_leaf(file: UploadFile = File(...)):
+async def analyze_leaf(file: UploadFile = File(...), zone: str | None = Form(default=None)):
+    selected_zone = clean_zone(zone)
+
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=415, detail="Upload a JPG, PNG or WEBP image.")
 
@@ -95,7 +105,7 @@ async def analyze_leaf(file: UploadFile = File(...)):
             "message": "The image was validated successfully. Configure the trained model to enable disease prediction.",
             "confidence": None,
             "severity": "Pending model",
-            "zone": "Not assigned",
+            "zone": selected_zone,
             "next_step": "Configure the trained chilli model",
             "filename": Path(file.filename or "leaf").name,
             "image_size": {"width": image.width, "height": image.height},
@@ -121,7 +131,7 @@ async def analyze_leaf(file: UploadFile = File(...)):
         "message": "Model prediction generated from the uploaded chilli leaf image.",
         "confidence": confidence,
         "severity": screening_band,
-        "zone": "Not assigned",
+        "zone": selected_zone,
         "next_step": next_step,
         "probabilities": result["probabilities"],
         "model": {"version": MODEL_VERSION, "sha256": MODEL_SHA256},
