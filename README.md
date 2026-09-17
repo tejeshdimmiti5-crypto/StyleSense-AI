@@ -29,7 +29,7 @@ The repository includes the FastAPI inference API, reproducible PyTorch training
 - Chilli-focused responsive web interface
 - Leaf image upload and preview
 - Backend-connected disease screening workflow
-- Scalable farm-zone health map
+- Configurable farm-zone health map
 - Zone risk indicators
 - Revenue and net-return calculator
 - FastAPI health and model-status endpoints
@@ -58,7 +58,7 @@ Release: `model-1`
 - Best validation macro F1: **0.8073**
 - Test set: **80 images**
 - Best checkpoint: **epoch 4**
-- Classes: `cercospora`, `healthy`, `mites_and_trips`, `nutritional`, `powdery mildew`
+- Classes: `cercospora`, `healthy`, `mites_and_trips`, `nutritional`, `powdery_mildew`
 
 These metrics are held-out test-set results for the COLD dataset and should not be interpreted as field accuracy. Field validation is still required.
 
@@ -89,9 +89,11 @@ API keys and secrets should **never** be committed to this repository. Use envir
 - `GET /api/health` — API and model status
 - `POST /api/analyze` — validate and screen a chilli leaf image
 
+`POST /api/analyze` also accepts an optional multipart `zone` field so the analysis response can identify the selected farm zone.
+
 ## Model bootstrap
 
-The Docker image runs `backend.fetch_model` before starting FastAPI. Configure `CHILLIPROFIT_MODEL_URL` with the trained release asset URL and optionally set `CHILLIPROFIT_MODEL_SHA256` to verify the downloaded checkpoint.
+The Docker image runs `backend.fetch_model` before starting FastAPI. Configure `CHILLIPROFIT_MODEL_URL` with the trained release asset URL, `CHILLIPROFIT_MODEL_SHA256` to verify the downloaded checkpoint, and `CHILLIPROFIT_MODEL_VERSION` to identify the deployed release.
 
 For `model-1`, the release asset is:
 
@@ -100,6 +102,12 @@ For `model-1`, the release asset is:
 The SHA-256 recorded for the model asset is:
 
 `b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce`
+
+## Deployment
+
+The repository contains a Render Blueprint at `render.yaml`. It builds the API from the root `Dockerfile`, downloads and verifies `model-1`, exposes `/health` for deployment health checks, and is configured to deploy only after repository CI checks pass.
+
+After creating the Render service, copy its generated API URL into `config.js` and set `FRONTEND_ORIGIN` on the backend to the deployed frontend origin. Then run the GitHub Actions **Production API verification** workflow with the API URL. That workflow verifies service health, model identity, image inference and farm-zone propagation.
 
 ## Roadmap
 
@@ -112,7 +120,7 @@ The SHA-256 recorded for the model asset is:
 - [x] Add Docker and Render deployment configuration
 - [ ] Validate shared classes on Krishna Basin field images
 - [ ] Add disease severity estimation as a separate calibrated model
-- [ ] Replace demo farm zones with user-defined farm layouts
+- [ ] Persist user-defined farm layouts
 - [ ] Add weather and soil inputs
 - [ ] Add yield prediction
 - [ ] Add richer cost/profit scenarios
