@@ -1,0 +1,81 @@
+name: Production API verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: Base URL of the deployed ChilliProfit AI API
+        required: true
+        type: string
+      expected_model:
+        description: Require the trained model to be configured
+        required: false
+        default: "true"
+        type: boolean
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check service health
+        env:
+          API_URL: ${{ inputs.api_url }}
+        run: |
+          set -euo pipefail
+          API_URL="${API_URL%/}"
+          curl --fail --silent --show-error --max-time 20 "$API_URL/health" | tee health.json
+          python - <<'PY'
+          import json
+          data = json.load(open("health.json"))
+          assert data.get("status") == "ok", data
+          print("Health check: OK")
+          PY
+
+      - name: Check model status
+        env:
+          API_URL: ${{ inputs.api_url }}
+          EXPECTED_MODEL: ${{ inputs.expected_model }}
+        run: |
+          set -euo pipefail
+          API_URL="${API_URL%/}"
+          curl --fail --silent --show-error --max-time 30 "$API_URL/api/health" | tee api-health.json
+          python - <<'PY'
+          import json
+          import os
+          data = json.load(open("api-health.json"))
+          assert data.get("status") == "ok", data
+          if os.environ.get("EXPECTED_MODEL", "true").lower() == "true":
+              assert data.get("model_configured") is True, data
+              model = data.get("model") or {}
+              assert model.get("architecture") == "EfficientNet-B0", data
+              assert len(model.get("classes", [])) == 5, data
+          print("API/model status: OK")
+          print(data)
+          PY
+
+      - name: Verify image analysis endpoint
+        env:
+          API_URL: ${{ inputs.api_url }}
+        run: |
+          set -euo pipefail
+          API_URL="${API_URL%/}"
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          image = Image.new("RGB", (32, 32), (90, 150, 40))
+          image.save("smoke.jpg", format="JPEG")
+          PY
+          curl --fail --silent --show-error --max-time 60 \
+            -F "file=@smoke.jpg;type=image/jpeg" \
+            "$API_URL/api/analyze" | tee analysis.json
+          python - <<'PY'
+          import json
+          data = json.load(open("analysis.json"))
+          assert data.get("status") == "prediction", data
+          assert data.get("confidence") is not None, data
+          assert isinstance(data.get("probabilities"), dict), data
+          print("Inference endpoint: OK")
+          print("Prediction:", data.get("title"))
+          print("Confidence:", data.get("confidence"))
+          PY
