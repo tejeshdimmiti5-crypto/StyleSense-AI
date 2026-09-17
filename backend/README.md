@@ -38,6 +38,8 @@ The first trained ChilliProfit model is published as GitHub Release `model-1` an
 
 The model is loaded automatically when `ml/artifacts/chilli_model.pt` exists. For Docker/Render deployment, `backend.fetch_model` downloads the release asset when `CHILLIPROFIT_MODEL_URL` is configured and verifies it when `CHILLIPROFIT_MODEL_SHA256` is set.
 
+Model-1 held-out COLD test results are 88.75% accuracy and 0.8798 macro F1. These are dataset test results, not field-accuracy claims.
+
 ## Environment variables
 
 ```text
@@ -53,6 +55,10 @@ The model URL and SHA above are public release metadata; API keys and other secr
 `POST /api/analyze` validates JPEG, PNG and WEBP uploads and rejects empty, invalid or oversized files. With the trained model available it returns the predicted class, model confidence, class probabilities and a recommended next step.
 
 The returned confidence is a model-screening confidence measure, **not biological disease severity**. The application should not use it as a substitute for field diagnosis or qualified agricultural guidance.
+
+## Production verification
+
+After the API is deployed, run the GitHub Actions workflow **Production API verification** manually and provide the deployed API base URL. The workflow checks `/health`, `/api/health`, confirms the EfficientNet-B0 model is configured, and sends a real JPEG through `/api/analyze` to verify end-to-end inference.
 
 ## Testing
 
