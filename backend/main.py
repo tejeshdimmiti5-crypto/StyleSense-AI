@@ -18,20 +18,10 @@ except ImportError:
 
 MODEL_PATH = ROOT / "ml" / "artifacts" / "chilli_model.pt"
 
-app = FastAPI(
-    title="ChilliProfit AI API",
-    version="0.3.0",
-    description="Backend API for chilli leaf screening and farm intelligence.",
-)
+app = FastAPI(title="ChilliProfit AI API", version="0.4.0", description="Backend API for chilli leaf screening and farm intelligence.")
 
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[frontend_origin] if frontend_origin != "*" else ["*"],
-    allow_credentials=frontend_origin != "*",
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=[frontend_origin] if frontend_origin != "*" else ["*"], allow_credentials=frontend_origin != "*", allow_methods=["*"], allow_headers=["*"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_BYTES = 10 * 1024 * 1024
@@ -59,14 +49,14 @@ def root():
     return {"service": "ChilliProfit AI", "status": "online"}
 
 
-@app.get("/api/health")
+@app.get("/health")
 def health():
-    return {
-        "status": "ok",
-        "model_configured": model_available(),
-        "model_path": str(MODEL_PATH),
-        "model": model_metadata(),
-    }
+    return {"status": "ok", "service": "ChilliProfit AI"}
+
+
+@app.get("/api/health")
+def api_health():
+    return {"status": "ok", "model_configured": model_available(), "model_path": str(MODEL_PATH), "model": model_metadata()}
 
 
 @app.post("/api/analyze")
@@ -86,17 +76,7 @@ async def analyze_leaf(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="The uploaded file is not a valid image.") from exc
 
     if not model_available():
-        return {
-            "status": "model_not_configured",
-            "title": "Image ready for AI screening",
-            "message": "The image was validated successfully. Train the model locally to enable disease prediction.",
-            "confidence": None,
-            "severity": "Pending model",
-            "zone": "Not assigned",
-            "next_step": "Train the chilli model",
-            "filename": Path(file.filename or "leaf").name,
-            "image_size": {"width": image.width, "height": image.height},
-        }
+        return {"status": "model_not_configured", "title": "Image ready for AI screening", "message": "The image was validated successfully. Train the model to enable disease prediction.", "confidence": None, "severity": "Pending model", "zone": "Not assigned", "next_step": "Train the chilli model", "filename": Path(file.filename or "leaf").name, "image_size": {"width": image.width, "height": image.height}}
 
     try:
         result = predict_image(image, MODEL_PATH)
@@ -109,29 +89,7 @@ async def analyze_leaf(file: UploadFile = File(...)):
     disease = result["class_name"]
     confidence = result["confidence"]
     is_healthy = disease.strip().lower() == "healthy"
+    screening_band = "High confidence" if confidence >= 85 else "Moderate confidence" if confidence >= 60 else "Low confidence"
+    next_step = "Continue monitoring and rescan if symptoms change" if is_healthy else "Inspect nearby plants and confirm the result with an agricultural professional"
 
-    # This is deliberately a screening-confidence band, not a clinical/agronomic
-    # disease-severity measurement. True severity requires a separately labelled model.
-    screening_band = (
-        "High confidence" if confidence >= 85
-        else "Moderate confidence" if confidence >= 60
-        else "Low confidence"
-    )
-    next_step = (
-        "Continue monitoring and rescan if symptoms change"
-        if is_healthy
-        else "Inspect nearby plants and confirm the result with an agricultural professional"
-    )
-
-    return {
-        "status": "prediction",
-        "title": disease.replace("_", " ").title(),
-        "message": "Model prediction generated from the uploaded chilli leaf image.",
-        "confidence": confidence,
-        "severity": screening_band,
-        "zone": "Not assigned",
-        "next_step": next_step,
-        "probabilities": result["probabilities"],
-        "filename": Path(file.filename or "leaf").name,
-        "image_size": {"width": image.width, "height": image.height},
-    }
+    return {"status": "prediction", "title": disease.replace("_", " ").title(), "message": "Model prediction generated from the uploaded chilli leaf image.", "confidence": confidence, "severity": screening_band, "zone": "Not assigned", "next_step": next_step, "probabilities": result["probabilities"], "filename": Path(file.filename or "leaf").name, "image_size": {"width": image.width, "height": image.height}}
