@@ -53,6 +53,7 @@ async function analyzeLeaf(file) {
   setResultState('Analyzing image…', 'Uploading the leaf image to the ChilliProfit AI backend.', { label: 'AI ANALYSIS', modelVersion: 'MODEL', nextStep: 'Processing' });
   const formData = new FormData();
   formData.append('file', file);
+  if (selectedZone) formData.append('zone', selectedZone);
   try {
     const response = await fetch(`${API_URL}/api/analyze`, { method: 'POST', body: formData });
     const data = await response.json();
@@ -64,7 +65,7 @@ async function analyzeLeaf(file) {
         zone: data.zone || selectedZone,
         nextStep: data.next_step,
         label: 'AI ANALYSIS',
-        modelVersion: data.model_version || 'MODEL'
+        modelVersion: data.model?.version || 'MODEL'
       });
       if (data.probabilities) {
         const probabilityText = Object.entries(data.probabilities).sort(([, a], [, b]) => b - a).map(([name, value]) => `${name.replaceAll('_', ' ')} ${value}%`).join(' • ');
@@ -72,7 +73,7 @@ async function analyzeLeaf(file) {
       }
     } else {
       setResultState(data.title || 'Image received', data.message || 'The image was validated successfully.', {
-        label: 'MODEL STATUS', modelVersion: data.model_version || 'SETUP', nextStep: data.next_step,
+        label: 'MODEL STATUS', modelVersion: data.model?.version || 'SETUP', nextStep: data.next_step,
         screeningBand: data.severity, zone: data.zone || selectedZone
       });
     }
@@ -88,10 +89,7 @@ const farmGrid = document.getElementById('farmGrid');
 const farmStatus = document.getElementById('farmStatus');
 const priorityZones = document.getElementById('priorityZones');
 let selectedZone = '';
-const zoneStates = new Map([
-  ['Zone 5', 'risk'],
-  ['Zone 8', 'risk']
-]);
+const zoneStates = new Map([['Zone 5', 'risk'], ['Zone 8', 'risk']]);
 
 function clampDimension(value) { return Math.max(1, Math.min(12, Number(value) || 1)); }
 
