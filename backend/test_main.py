@@ -50,20 +50,31 @@ def test_rejects_non_image():
     assert response.status_code == 415
 
 
-def test_accepts_valid_image():
+def test_accepts_valid_image_and_preserves_zone():
     response = client.post(
         "/api/analyze",
         files={"file": ("leaf.png", make_png(), "image/png")},
+        data={"zone": "Zone 4"},
     )
     assert response.status_code == 200
     body = response.json()
     assert body["status"] in {"model_not_configured", "prediction"}
-    assert "filename" in body
     assert body["filename"] == "leaf.png"
-    assert "image_size" in body
+    assert body["image_size"] == {"width": 32, "height": 32}
+    assert body["zone"] == "Zone 4"
     if body["status"] == "prediction":
         assert body["model"]["version"] == MODEL_VERSION
         assert body["model"]["sha256"] == MODEL_SHA256
+
+
+def test_empty_zone_defaults_to_not_assigned():
+    response = client.post(
+        "/api/analyze",
+        files={"file": ("leaf.png", make_png(), "image/png")},
+        data={"zone": "   "},
+    )
+    assert response.status_code == 200
+    assert response.json()["zone"] == "Not assigned"
 
 
 def test_rejects_empty_image():
