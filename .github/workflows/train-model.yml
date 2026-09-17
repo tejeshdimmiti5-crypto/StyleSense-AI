@@ -36,10 +36,25 @@ jobs:
       - name: Train model
         run: python ml/train.py --epochs ${{ inputs.epochs }} --batch-size ${{ inputs.batch_size }}
 
+      - name: Generate model integrity manifest
+        run: |
+          sha256sum ml/artifacts/chilli_model.pt > ml/artifacts/chilli_model.sha256
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          metrics = json.loads(Path("ml/artifacts/chilli_model.json").read_text())
+          print("Test accuracy:", metrics["test_accuracy"])
+          print("Test macro F1:", metrics["test_macro_f1"])
+          print("Best validation macro F1:", metrics["best_validation_macro_f1"])
+          PY
+
       - name: Upload trained model and metrics
         uses: actions/upload-artifact@v4
         with:
           name: chilliprofit-model-${{ github.run_number }}
+          retention-days: 30
           path: |
             ml/artifacts/chilli_model.pt
             ml/artifacts/chilli_model.json
+            ml/artifacts/chilli_model.sha256
