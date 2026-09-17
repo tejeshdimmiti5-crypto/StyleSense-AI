@@ -17,8 +17,10 @@ except ImportError:
     load_model = None
 
 MODEL_PATH = ROOT / "ml" / "artifacts" / "chilli_model.pt"
+MODEL_VERSION = os.getenv("CHILLIPROFIT_MODEL_VERSION", "model-1")
+MODEL_SHA256 = os.getenv("CHILLIPROFIT_MODEL_SHA256", "b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce")
 
-app = FastAPI(title="ChilliProfit AI API", version="0.4.0", description="Backend API for chilli leaf screening and farm intelligence.")
+app = FastAPI(title="ChilliProfit AI API", version="0.5.0", description="Backend API for chilli leaf screening and farm intelligence.")
 
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
 app.add_middleware(CORSMiddleware, allow_origins=[frontend_origin] if frontend_origin != "*" else ["*"], allow_credentials=frontend_origin != "*", allow_methods=["*"], allow_headers=["*"])
@@ -39,7 +41,13 @@ def model_metadata():
         if loaded is None:
             return None
         _, class_names = loaded
-        return {"architecture": "EfficientNet-B0", "classes": class_names, "image_size": 224}
+        return {
+            "version": MODEL_VERSION,
+            "sha256": MODEL_SHA256,
+            "architecture": "EfficientNet-B0",
+            "classes": class_names,
+            "image_size": 224,
+        }
     except Exception:
         return None
 
@@ -56,7 +64,12 @@ def health():
 
 @app.get("/api/health")
 def api_health():
-    return {"status": "ok", "model_configured": model_available(), "model_path": str(MODEL_PATH), "model": model_metadata()}
+    return {
+        "status": "ok",
+        "model_configured": model_available(),
+        "model_path": str(MODEL_PATH),
+        "model": model_metadata(),
+    }
 
 
 @app.post("/api/analyze")
@@ -76,7 +89,17 @@ async def analyze_leaf(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="The uploaded file is not a valid image.") from exc
 
     if not model_available():
-        return {"status": "model_not_configured", "title": "Image ready for AI screening", "message": "The image was validated successfully. Train the model to enable disease prediction.", "confidence": None, "severity": "Pending model", "zone": "Not assigned", "next_step": "Train the chilli model", "filename": Path(file.filename or "leaf").name, "image_size": {"width": image.width, "height": image.height}}
+        return {
+            "status": "model_not_configured",
+            "title": "Image ready for AI screening",
+            "message": "The image was validated successfully. Configure the trained model to enable disease prediction.",
+            "confidence": None,
+            "severity": "Pending model",
+            "zone": "Not assigned",
+            "next_step": "Configure the trained chilli model",
+            "filename": Path(file.filename or "leaf").name,
+            "image_size": {"width": image.width, "height": image.height},
+        }
 
     try:
         result = predict_image(image, MODEL_PATH)
@@ -92,4 +115,16 @@ async def analyze_leaf(file: UploadFile = File(...)):
     screening_band = "High confidence" if confidence >= 85 else "Moderate confidence" if confidence >= 60 else "Low confidence"
     next_step = "Continue monitoring and rescan if symptoms change" if is_healthy else "Inspect nearby plants and confirm the result with an agricultural professional"
 
-    return {"status": "prediction", "title": disease.replace("_", " ").title(), "message": "Model prediction generated from the uploaded chilli leaf image.", "confidence": confidence, "severity": screening_band, "zone": "Not assigned", "next_step": next_step, "probabilities": result["probabilities"], "filename": Path(file.filename or "leaf").name, "image_size": {"width": image.width, "height": image.height}}
+    return {
+        "status": "prediction",
+        "title": disease.replace("_", " ").title(),
+        "message": "Model prediction generated from the uploaded chilli leaf image.",
+        "confidence": confidence,
+        "severity": screening_band,
+        "zone": "Not assigned",
+        "next_step": next_step,
+        "probabilities": result["probabilities"],
+        "model": {"version": MODEL_VERSION, "sha256": MODEL_SHA256},
+        "filename": Path(file.filename or "leaf").name,
+        "image_size": {"width": image.width, "height": image.height},
+    }
