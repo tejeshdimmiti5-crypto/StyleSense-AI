@@ -1,6 +1,11 @@
 name: Train chilli model
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "ml/**"
+      - ".github/workflows/train-model.yml"
   workflow_dispatch:
     inputs:
       epochs:
@@ -37,7 +42,7 @@ jobs:
         run: python ml/download_datasets.py
 
       - name: Train model
-        run: python ml/train.py --epochs ${{ inputs.epochs }} --batch-size ${{ inputs.batch_size }}
+        run: python ml/train.py --epochs ${{ inputs.epochs || '12' }} --batch-size ${{ inputs.batch_size || '32' }}
 
       - name: Generate model integrity manifest
         run: |
