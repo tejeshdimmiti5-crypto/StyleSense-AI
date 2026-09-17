@@ -46,7 +46,10 @@ Model-1 held-out COLD test results are 88.75% accuracy and 0.8798 macro F1. Thes
 FRONTEND_ORIGIN=https://your-frontend.example
 CHILLIPROFIT_MODEL_URL=https://github.com/tejeshdimmiti5-crypto/StyleSense-AI/releases/download/model-1/chilli_model.pt
 CHILLIPROFIT_MODEL_SHA256=b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce
+CHILLIPROFIT_MODEL_VERSION=model-1
 ```
+
+`CHILLIPROFIT_MODEL_VERSION` identifies the model release reported by `/api/health` and `/api/analyze`. It defaults to `model-1` when omitted.
 
 The model URL and SHA above are public release metadata; API keys and other secrets must never be committed.
 
@@ -54,11 +57,13 @@ The model URL and SHA above are public release metadata; API keys and other secr
 
 `POST /api/analyze` validates JPEG, PNG and WEBP uploads and rejects empty, invalid or oversized files. With the trained model available it returns the predicted class, model confidence, class probabilities and a recommended next step.
 
+The optional multipart form field `zone` identifies the farm-map zone associated with the uploaded leaf. If it is omitted or blank, the API returns `Not assigned`. The current frontend keeps farm-map zone state in the browser; the API does not persist zone state between sessions.
+
 The returned confidence is a model-screening confidence measure, **not biological disease severity**. The application should not use it as a substitute for field diagnosis or qualified agricultural guidance.
 
 ## Production verification
 
-After the API is deployed, run the GitHub Actions workflow **Production API verification** manually and provide the deployed API base URL. The workflow checks `/health`, `/api/health`, confirms the EfficientNet-B0 model is configured, and sends a real JPEG through `/api/analyze` to verify end-to-end inference.
+After the API is deployed, run the GitHub Actions workflow **Production API verification** manually and provide the deployed API base URL. The workflow checks `/health`, `/api/health`, confirms the EfficientNet-B0 model is configured, validates the expected model version and SHA256, and sends a real JPEG through `/api/analyze` with a selected zone to verify end-to-end inference.
 
 ## Testing
 
