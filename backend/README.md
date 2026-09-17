@@ -22,26 +22,47 @@ The API will run at `http://127.0.0.1:8000`.
 ## Endpoints
 
 - `GET /` — service status
+- `GET /health` — deployment health check
 - `GET /api/health` — health/model status
-- `POST /api/analyze` — validates an uploaded chilli leaf image
+- `POST /api/analyze` — validates and screens an uploaded chilli leaf image
 
-The current `/api/analyze` endpoint deliberately does **not** return a fake disease classification. It returns `model_not_configured` until a trained computer-vision model is connected.
+The API does not return a fabricated disease result. With the trained checkpoint available, `/api/analyze` runs the EfficientNet-B0 classifier and returns the predicted class, confidence and probability distribution.
 
-## Dataset plan
+## Trained model
 
-The first training source will be public chilli-leaf datasets. The COLD chilli dataset contains 10,987 processed images across five classes: Healthy, Cercospora, Mites and Trips, Nutritional Deficiency, and Powdery Mildew. Its raw collection contains 532 original photographs; the larger set includes augmentation. The dataset is publicly available under CC BY 4.0. See the project paper and dataset sources before redistribution. 
+The first model was successfully trained by GitHub Actions run `35230162129` and published as release `model-1`.
 
-A second useful source is the 2026 Krishna River Basin chilli dataset, which includes field images from Andhra Pradesh districts including Guntur and Prakasam, plus Karnataka locations. It contains healthy/diseased chilli leaves and growth-stage images. 
+- Architecture: EfficientNet-B0
+- Classes: `cercospora`, `healthy`, `mites_and_trips`, `nutritional`, `powdery mildew`
+- Test accuracy: 88.75%
+- Test macro F1: 0.8798
+- Checkpoint size: about 16.4 MB
 
-We will keep downloaded datasets outside this GitHub repository and train from a local `data/` directory to avoid committing large image files.
+Model release asset:
 
-## Next ML stage
+`https://github.com/tejeshdimmiti5-crypto/StyleSense-AI/releases/download/model-1/chilli_model.pt`
 
-1. Download approved public datasets.
-2. Inspect class names and licenses.
-3. Remove corrupted/duplicate images.
-4. Create train/validation/test splits without leakage.
-5. Train a transfer-learning classifier.
-6. Evaluate accuracy, precision, recall, F1 and confusion matrix.
-7. Export the best model.
-8. Connect inference to `/api/analyze`.
+SHA-256:
+
+`b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce`
+
+## Production model bootstrap
+
+`backend.fetch_model` can download the checkpoint when the API starts. Set these environment variables on the deployment platform:
+
+```text
+CHILLIPROFIT_MODEL_URL=https://github.com/tejeshdimmiti5-crypto/StyleSense-AI/releases/download/model-1/chilli_model.pt
+CHILLIPROFIT_MODEL_SHA256=b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce
+```
+
+The SHA-256 value is optional but recommended so the downloaded model is verified before use.
+
+## Dataset
+
+The primary training source is the raw COLD chilli-leaf dataset from Hugging Face. The training pipeline keeps the downloaded images outside GitHub and uses a stratified train/validation/test split with training-only augmentation.
+
+The Krishna River Basin dataset remains an external validation source and is not silently mixed into training.
+
+## Important
+
+The model is a research screening prototype, not a definitive agricultural diagnosis. Test-set metrics do not guarantee field performance. Field images should be used for additional validation before relying on predictions for treatment decisions.
