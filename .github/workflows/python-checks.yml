@@ -36,3 +36,6 @@ jobs:
 
       - name: Verify ML inference module imports
         run: python -c "from ml.infer import predict_image, load_model; print('ML inference import OK')"
+
+      - name: Run API smoke tests
+        run: pytest -q backend/test_main.py
