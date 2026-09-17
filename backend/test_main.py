@@ -21,7 +21,13 @@ def test_root():
     assert response.json()["service"] == "ChilliProfit AI"
 
 
-def test_health():
+def test_render_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "service": "ChilliProfit AI"}
+
+
+def test_api_health():
     response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
@@ -29,18 +35,12 @@ def test_health():
 
 
 def test_rejects_non_image_upload():
-    response = client.post(
-        "/api/analyze",
-        files={"file": ("notes.txt", b"not an image", "text/plain")},
-    )
+    response = client.post("/api/analyze", files={"file": ("notes.txt", b"not an image", "text/plain")})
     assert response.status_code == 415
 
 
 def test_accepts_valid_image_without_fake_prediction():
-    response = client.post(
-        "/api/analyze",
-        files={"file": ("leaf.png", make_image_bytes(), "image/png")},
-    )
+    response = client.post("/api/analyze", files={"file": ("leaf.png", make_image_bytes(), "image/png")})
     assert response.status_code == 200
     body = response.json()
     assert body["status"] in {"model_not_configured", "prediction"}
