@@ -1,6 +1,7 @@
 const API_URL = window.CHILLIPROFIT_API_URL || 'http://127.0.0.1:8000';
 const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const FARM_STORAGE_KEY = 'chilliprofit-farm-map-v1';
 
 const leafInput = document.getElementById('leafInput');
 const preview = document.getElementById('preview');
@@ -89,7 +90,41 @@ const farmGrid = document.getElementById('farmGrid');
 const farmStatus = document.getElementById('farmStatus');
 const priorityZones = document.getElementById('priorityZones');
 let selectedZone = '';
-const zoneStates = new Map([['Zone 5', 'risk'], ['Zone 8', 'risk']]);
+let zoneStates = new Map([['Zone 5', 'risk'], ['Zone 8', 'risk']]);
+
+function loadFarmState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FARM_STORAGE_KEY) || 'null');
+    if (!saved || typeof saved !== 'object') return;
+    const savedRows = Number(saved.rows);
+    const savedCols = Number(saved.cols);
+    if (Number.isInteger(savedRows) && savedRows >= 1 && savedRows <= 12) farmRows.value = savedRows;
+    if (Number.isInteger(savedCols) && savedCols >= 1 && savedCols <= 12) farmCols.value = savedCols;
+    if (saved.zoneStates && typeof saved.zoneStates === 'object') {
+      const restored = new Map();
+      Object.entries(saved.zoneStates).forEach(([name, state]) => {
+        if (/^Zone \d+$/.test(name) && ['healthy', 'watch', 'risk'].includes(state)) restored.set(name, state);
+      });
+      if (restored.size) zoneStates = restored;
+    }
+    if (typeof saved.selectedZone === 'string') selectedZone = saved.selectedZone;
+  } catch {
+    // Ignore malformed browser storage and start with the safe defaults.
+  }
+}
+
+function saveFarmState() {
+  try {
+    localStorage.setItem(FARM_STORAGE_KEY, JSON.stringify({
+      rows: clampDimension(farmRows.value),
+      cols: clampDimension(farmCols.value),
+      selectedZone,
+      zoneStates: Object.fromEntries(zoneStates)
+    }));
+  } catch {
+    // Browser storage can be unavailable in private/restricted contexts.
+  }
+}
 
 function clampDimension(value) { return Math.max(1, Math.min(12, Number(value) || 1)); }
 
@@ -116,9 +151,11 @@ function buildFarmMap() {
       cycleZoneState(zoneName);
     });
     farmGrid.appendChild(button);
+    if (zoneName === selectedZone) button.style.outline = '3px solid rgba(185,223,101,.85)';
   }
   farmStatus.textContent = `● ${count} zones`;
   updatePriorityZones();
+  saveFarmState();
 }
 
 function selectFarmZone(zoneName, button) {
@@ -127,6 +164,7 @@ function selectFarmZone(zoneName, button) {
   button.style.outline = '3px solid rgba(185,223,101,.85)';
   zone.textContent = zoneName;
   resultText.textContent = `${zoneName} selected. Capture a leaf image from this zone for disease screening.`;
+  saveFarmState();
 }
 
 function cycleZoneState(zoneName) {
@@ -141,6 +179,7 @@ function updatePriorityZones() {
   priorityZones.textContent = risks.length ? risks.join(' & ') : 'Select observations';
 }
 
+loadFarmState();
 buildFarm.addEventListener('click', buildFarmMap);
 [farmRows, farmCols].forEach(input => input.addEventListener('change', buildFarmMap));
 buildFarmMap();
