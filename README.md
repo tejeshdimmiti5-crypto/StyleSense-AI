@@ -46,7 +46,23 @@ Primary training dataset:
 
 `Project-AgML/COLD_chili_leaf_disease_classification`
 
-Training uses the raw image collection, a stratified train/validation/test split, training-only augmentation, class-weighted loss, EfficientNet-B0 transfer learning, early stopping and macro-F1 model selection. The training workflow produces:
+Training uses the raw image collection, a stratified train/validation/test split, training-only augmentation, class-weighted loss, EfficientNet-B0 transfer learning, early stopping and macro-F1 model selection.
+
+### Model 1 — trained successfully
+
+GitHub Actions training run: `35230162129`  
+Release: `model-1`
+
+- Test accuracy: **88.75%**
+- Test macro F1: **0.8798**
+- Best validation macro F1: **0.8073**
+- Test set: **80 images**
+- Best checkpoint: **epoch 4**
+- Classes: `cercospora`, `healthy`, `mites_and_trips`, `nutritional`, `powdery mildew`
+
+These metrics are held-out test-set results for the COLD dataset and should not be interpreted as field accuracy. Field validation is still required.
+
+Model artifacts are published in the `model-1` GitHub Release:
 
 - `chilli_model.pt` — trained checkpoint
 - `chilli_model.json` — evaluation metrics and confusion matrix
@@ -77,6 +93,14 @@ API keys and secrets should **never** be committed to this repository. Use envir
 
 The Docker image runs `backend.fetch_model` before starting FastAPI. Configure `CHILLIPROFIT_MODEL_URL` with the trained release asset URL and optionally set `CHILLIPROFIT_MODEL_SHA256` to verify the downloaded checkpoint.
 
+For `model-1`, the release asset is:
+
+`https://github.com/tejeshdimmiti5-crypto/StyleSense-AI/releases/download/model-1/chilli_model.pt`
+
+The SHA-256 recorded for the model asset is:
+
+`b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce`
+
 ## Roadmap
 
 - [x] Build responsive chilli-farming interface
@@ -84,8 +108,8 @@ The Docker image runs `backend.fetch_model` before starting FastAPI. Configure `
 - [x] Add reproducible transfer-learning training pipeline
 - [x] Add model inference integration
 - [x] Add automated model training and release workflow
+- [x] Complete first successful trained-model release
 - [x] Add Docker and Render deployment configuration
-- [ ] Complete first successful trained-model release
 - [ ] Validate shared classes on Krishna Basin field images
 - [ ] Add disease severity estimation as a separate calibrated model
 - [ ] Replace demo farm zones with user-defined farm layouts
