@@ -30,6 +30,7 @@ The repository includes the FastAPI inference API, reproducible PyTorch training
 - Leaf image upload and preview
 - Backend-connected disease screening workflow
 - Configurable farm-zone health map
+- Browser-persisted zone layout and risk states
 - Zone risk indicators
 - Revenue and net-return calculator
 - FastAPI health and model-status endpoints
@@ -91,6 +92,12 @@ API keys and secrets should **never** be committed to this repository. Use envir
 
 `POST /api/analyze` also accepts an optional multipart `zone` field so the analysis response can identify the selected farm zone.
 
+## Farm-map persistence
+
+The current frontend persists the farm grid dimensions, selected zone and zone risk states in the browser using `localStorage`. This keeps the farmer's map available after page refreshes on the same browser/device.
+
+This is **client-side persistence**, not a cloud database. Cross-device or multi-user farm records require a backend database and authentication layer, which remain future work.
+
 ## Model bootstrap
 
 The Docker image runs `backend.fetch_model` before starting FastAPI. Configure `CHILLIPROFIT_MODEL_URL` with the trained release asset URL, `CHILLIPROFIT_MODEL_SHA256` to verify the downloaded checkpoint, and `CHILLIPROFIT_MODEL_VERSION` to identify the deployed release.
@@ -118,9 +125,10 @@ After creating the Render service, copy its generated API URL into `config.js` a
 - [x] Add automated model training and release workflow
 - [x] Complete first successful trained-model release
 - [x] Add Docker and Render deployment configuration
+- [x] Persist farm layout and zone risk states locally in the browser
 - [ ] Validate shared classes on Krishna Basin field images
 - [ ] Add disease severity estimation as a separate calibrated model
-- [ ] Persist user-defined farm layouts
+- [ ] Add cloud persistence and user accounts
 - [ ] Add weather and soil inputs
 - [ ] Add yield prediction
 - [ ] Add richer cost/profit scenarios
