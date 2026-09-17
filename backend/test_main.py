@@ -3,7 +3,7 @@ import io
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from backend.main import app
+from backend.main import MODEL_SHA256, MODEL_VERSION, app
 
 client = TestClient(app)
 
@@ -35,6 +35,11 @@ def test_api_health():
     assert body["status"] == "ok"
     assert "model_configured" in body
     assert "model" in body
+    if body["model_configured"]:
+        assert body["model"]["version"] == MODEL_VERSION
+        assert body["model"]["sha256"] == MODEL_SHA256
+        assert body["model"]["architecture"] == "EfficientNet-B0"
+        assert len(body["model"]["classes"]) == 5
 
 
 def test_rejects_non_image():
@@ -56,6 +61,9 @@ def test_accepts_valid_image():
     assert "filename" in body
     assert body["filename"] == "leaf.png"
     assert "image_size" in body
+    if body["status"] == "prediction":
+        assert body["model"]["version"] == MODEL_VERSION
+        assert body["model"]["sha256"] == MODEL_SHA256
 
 
 def test_rejects_empty_image():
