@@ -1,0 +1,1 @@
+"""ChilliProfit AI backend package."""
