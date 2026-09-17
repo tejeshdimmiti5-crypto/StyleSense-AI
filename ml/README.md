@@ -6,9 +6,9 @@ The default training script uses the **raw COLD chilli-leaf dataset** from Huggi
 
 `Project-AgML/COLD_chili_leaf_disease_classification`
 
-The raw subset contains 532 original images in five classes: `cercospora`, `healthy`, `mites_and_trips`, `nutritional`, and `powdery mildew`. The source also provides a much larger augmented subset, but this project starts from original images and performs augmentation only on the training split to reduce validation/test leakage. citeturn1view1
+The raw subset contains 532 original images in five classes: `cercospora`, `healthy`, `mites_and_trips`, `nutritional`, and `powdery mildew`. The source also provides a much larger augmented subset, but this project starts from original images and performs augmentation only on the training split to reduce validation/test leakage.
 
-A second dataset is available from the Krishna River Basin, covering districts including Guntur, Prakasam, Krishna and Kurnool in Andhra Pradesh. It reports 1,856 original images across six classes and is licensed CC BY 4.0. We can add this as the next training source after verifying its downloadable file structure. citeturn1view0
+A second dataset is available from the Krishna River Basin, covering districts including Guntur, Prakasam, Krishna and Kurnool in Andhra Pradesh. It reports 1,856 original images across six classes and is licensed CC BY 4.0. We can add this as the next training source after verifying its downloadable file structure.
 
 ## Train locally
 
