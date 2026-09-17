@@ -23,46 +23,41 @@ The API will run at `http://127.0.0.1:8000`.
 
 - `GET /` — service status
 - `GET /health` — deployment health check
-- `GET /api/health` — health/model status
+- `GET /api/health` — API and trained-model status
 - `POST /api/analyze` — validates and screens an uploaded chilli leaf image
-
-The API does not return a fabricated disease result. With the trained checkpoint available, `/api/analyze` runs the EfficientNet-B0 classifier and returns the predicted class, confidence and probability distribution.
 
 ## Trained model
 
-The first model was successfully trained by GitHub Actions run `35230162129` and published as release `model-1`.
+The first trained ChilliProfit model is published as GitHub Release `model-1` and uses EfficientNet-B0 transfer learning with five classes:
 
-- Architecture: EfficientNet-B0
-- Classes: `cercospora`, `healthy`, `mites_and_trips`, `nutritional`, `powdery mildew`
-- Test accuracy: 88.75%
-- Test macro F1: 0.8798
-- Checkpoint size: about 16.4 MB
+- `cercospora`
+- `healthy`
+- `mites_and_trips`
+- `nutritional`
+- `powdery_mildew`
 
-Model release asset:
+The model is loaded automatically when `ml/artifacts/chilli_model.pt` exists. For Docker/Render deployment, `backend.fetch_model` downloads the release asset when `CHILLIPROFIT_MODEL_URL` is configured and verifies it when `CHILLIPROFIT_MODEL_SHA256` is set.
 
-`https://github.com/tejeshdimmiti5-crypto/StyleSense-AI/releases/download/model-1/chilli_model.pt`
-
-SHA-256:
-
-`b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce`
-
-## Production model bootstrap
-
-`backend.fetch_model` can download the checkpoint when the API starts. Set these environment variables on the deployment platform:
+## Environment variables
 
 ```text
+FRONTEND_ORIGIN=https://your-frontend.example
 CHILLIPROFIT_MODEL_URL=https://github.com/tejeshdimmiti5-crypto/StyleSense-AI/releases/download/model-1/chilli_model.pt
 CHILLIPROFIT_MODEL_SHA256=b2db895fd43bf801fcc522c3f749fe8f5a9766583cc0e4f336a3553e645bb0ce
 ```
 
-The SHA-256 value is optional but recommended so the downloaded model is verified before use.
+The model URL and SHA above are public release metadata; API keys and other secrets must never be committed.
 
-## Dataset
+## API behavior
 
-The primary training source is the raw COLD chilli-leaf dataset from Hugging Face. The training pipeline keeps the downloaded images outside GitHub and uses a stratified train/validation/test split with training-only augmentation.
+`POST /api/analyze` validates JPEG, PNG and WEBP uploads and rejects empty, invalid or oversized files. With the trained model available it returns the predicted class, model confidence, class probabilities and a recommended next step.
 
-The Krishna River Basin dataset remains an external validation source and is not silently mixed into training.
+The returned confidence is a model-screening confidence measure, **not biological disease severity**. The application should not use it as a substitute for field diagnosis or qualified agricultural guidance.
 
-## Important
+## Testing
 
-The model is a research screening prototype, not a definitive agricultural diagnosis. Test-set metrics do not guarantee field performance. Field images should be used for additional validation before relying on predictions for treatment decisions.
+From the repository root:
+
+```bash
+pytest backend/test_main.py
+```
