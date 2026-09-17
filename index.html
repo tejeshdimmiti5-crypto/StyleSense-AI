@@ -6,7 +6,7 @@
   <meta name="description" content="ChilliProfit AI - AI-powered chilli disease detection and farm intelligence." />
   <title>ChilliProfit AI | Smart Chilli Farming</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -53,29 +53,29 @@
       <div class="section-heading">
         <span class="eyebrow">01 • DISEASE DETECTION</span>
         <h2>Scan a chilli leaf</h2>
-        <p>Upload a clear leaf image to start the disease-screening workflow. The interface is ready for connection to a trained computer-vision model.</p>
+        <p>Upload a clear leaf image to start AI disease screening using the trained ChilliProfit computer-vision model.</p>
       </div>
 
       <div class="analyzer-layout">
         <label class="upload-box" id="dropZone">
-          <input id="leafInput" type="file" accept="image/*" />
+          <input id="leafInput" type="file" accept="image/jpeg,image/png,image/webp" />
           <div id="uploadContent">
             <div class="upload-icon">📷</div>
             <h3>Upload leaf image</h3>
-            <p>PNG, JPG or WEBP</p>
+            <p>PNG, JPG or WEBP • Max 10 MB</p>
             <span class="upload-button">Choose image</span>
           </div>
           <img id="preview" alt="Uploaded chilli leaf preview" hidden />
         </label>
 
         <div class="result-card" id="resultCard">
-          <div class="result-top"><span class="status-dot"></span><span>AI ANALYSIS</span><span class="demo-tag">DEMO</span></div>
+          <div class="result-top"><span class="status-dot"></span><span>AI ANALYSIS</span><span class="demo-tag">MODEL</span></div>
           <h3 id="resultTitle">Waiting for image</h3>
-          <p id="resultText">Upload a chilli leaf to start the screening workflow.</p>
+          <p id="resultText">Upload a chilli leaf to start AI screening.</p>
           <div class="confidence-row"><span>Confidence</span><strong id="confidence">—</strong></div>
           <div class="progress"><i id="confidenceBar"></i></div>
           <div class="result-grid">
-            <div><small>Severity</small><strong id="severity">—</strong></div>
+            <div><small>Screening band</small><strong id="severity">—</strong></div>
             <div><small>Farm zone</small><strong id="zone">—</strong></div>
             <div><small>Next step</small><strong id="nextStep">—</strong></div>
           </div>
@@ -131,14 +131,15 @@
     </section>
 
     <section class="section cta">
-      <span class="eyebrow">NEXT BUILD</span>
-      <h2>From prototype to real AI.</h2>
-      <p>Connect a trained chilli disease model, weather data, soil inputs and a secure backend API.</p>
-      <a class="primary" href="#analyzer">Continue building →</a>
+      <span class="eyebrow">AI MODEL CONNECTED</span>
+      <h2>From leaf image to farm intelligence.</h2>
+      <p>Use the trained model for screening, then combine field observations, weather, soil and economics for broader farm decision support.</p>
+      <a class="primary" href="#analyzer">Scan a leaf →</a>
     </section>
   </main>
 
   <footer><span>🌶️ ChilliProfit AI</span><span>AI-powered chilli farming intelligence</span></footer>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
