@@ -5,3 +5,5 @@ Pillow
 python-dotenv
 torch>=2.4
 torchvision>=0.19
+httpx>=0.27
+pytest>=8.0
