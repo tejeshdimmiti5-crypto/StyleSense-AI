@@ -14,4 +14,4 @@ COPY ml /app/ml
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+CMD ["sh", "-c", "python -m backend.fetch_model && uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
